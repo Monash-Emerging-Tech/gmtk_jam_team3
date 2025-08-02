@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://cqxn6urgcg80m"]
+
+[ext_resource type="Texture2D" uid="uid://dmch0y4lalfso" path="res://assets/piixl BattleSnake/snakes/32x32px_split/snake082.png" id="1_nddv5"]
+[ext_resource type="Script" uid="uid://qqhtiwlhbcf4" path="res://scenes/snake.gd" id="2_6ksjk"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_nddv5"]
+radius = 11.0
+
+[node name="snake_test" type="Node2D"]
+
+[node name="head" type="RigidBody2D" parent="."]
+unique_name_in_owner = true
+
+[node name="Sprite2D" type="Sprite2D" parent="head"]
+texture = ExtResource("1_nddv5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="head"]
+shape = SubResource("CircleShape2D_nddv5")
+
+[node name="Line2D" type="Line2D" parent="."]
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+script = ExtResource("2_6ksjk")

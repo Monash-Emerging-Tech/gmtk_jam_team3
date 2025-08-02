@@ -1,0 +1,186 @@
+[gd_scene load_steps=16 format=3 uid="uid://c3rcfsu8ji7e6"]
+
+[ext_resource type="Texture2D" uid="uid://cf07oaacgnkx6" path="res://assets/Pixel_Poem Dungeon Tileset II (prototype only)/Enemy_Animations_Set/enemies-skeleton1_idle.png" id="1_iyx0m"]
+[ext_resource type="Texture2D" uid="uid://b4vuwkgf21rj1" path="res://assets/Pixel_Poem Dungeon Tileset II (prototype only)/Enemy_Animations_Set/enemies-skeleton1_movement.png" id="2_74lek"]
+[ext_resource type="Texture2D" uid="uid://spq38rlx82x8" path="res://assets/Pixel_Poem Dungeon Tileset II (prototype only)/character and tileset/Dungeon_Tileset.png" id="4_74lek"]
+
+[sub_resource type="GDScript" id="GDScript_errlg"]
+resource_name = "player"
+script/source = "extends CharacterBody2D
+
+@export var run_speed : int = 50
+@export var health : int = 100
+@export var push_force : int = 80
+
+func _physics_process(delta):
+	if health <= 0:
+		return
+	
+	var direction = Input.get_vector(\"move_left\",\"move_right\",\"move_up\",\"move_down\")
+	velocity = direction * run_speed
+	
+	move_and_slide()
+	for i in get_slide_collision_count():
+		var c = get_slide_collision(i)
+		if c.get_collider() is RigidBody2D:
+			c.get_collider().apply_central_impulse(-c.get_normal() * push_force)
+			
+	
+	$AnimatedSprite2D.flip_h = direction.x < 0
+	
+	if velocity.length() > 0.0:
+		$AnimatedSprite2D.play(\"run\")
+	else:
+		$AnimatedSprite2D.play(\"idle\")
+		
+
+	
+
+func take_damage():
+	return
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bl13t"]
+radius = 7.07107
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j5jx5"]
+atlas = ExtResource("1_iyx0m")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lpvoh"]
+atlas = ExtResource("1_iyx0m")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_44saj"]
+atlas = ExtResource("2_74lek")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5jxlq"]
+atlas = ExtResource("2_74lek")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_jcd4p"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j5jx5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lpvoh")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_44saj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5jxlq")
+}],
+"loop": true,
+"name": &"run",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_at5dv"]
+atlas = ExtResource("4_74lek")
+region = Rect2(32, 128, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_n74k2"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_at5dv")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="GDScript" id="GDScript_74lek"]
+resource_name = "chest"
+script/source = "extends AnimatedSprite2D
+
+const APPLE = preload(\"res://prefabs/apple.tscn\")
+
+var entered = false
+var opened = false
+var spawn_force = 100
+
+func _physics_process(delta):
+	if opened:
+		return
+	
+	if Input.is_action_just_pressed(\"interact\") and entered:
+		#opened = true
+		self.modulate = Color(\"red\")
+		var new_apple = APPLE.instantiate()
+		var random_direction = Vector2.from_angle(randf()* 2 * PI)
+		new_apple.position = position + random_direction * 10
+		new_apple.apply_central_impulse(random_direction * spawn_force)
+		get_tree().root.add_child(new_apple)
+
+func _on_detection_body_shape_entered(body_rid: RID, body: Node2D, body_shape_index: int, local_shape_index: int) -> void:
+	if opened:
+		return
+	entered = true
+	self.modulate = Color(\"green\")
+
+func _on_detection_body_shape_exited(body_rid: RID, body: Node2D, body_shape_index: int, local_shape_index: int) -> void:
+	if opened:
+		return
+	entered = false
+	self.modulate = Color(\"white\")
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_si7kk"]
+size = Vector2(12, 12)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_74lek"]
+radius = 12.0416
+
+[node name="player_test" type="Node2D"]
+
+[node name="player" type="CharacterBody2D" parent="."]
+collision_layer = 2
+collision_mask = 3
+script = SubResource("GDScript_errlg")
+
+[node name="Camera2D" type="Camera2D" parent="player"]
+zoom = Vector2(5, 5)
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="player"]
+shape = SubResource("CircleShape2D_bl13t")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="player"]
+z_index = 20
+position = Vector2(0, -6)
+sprite_frames = SubResource("SpriteFrames_jcd4p")
+animation = &"run"
+autoplay = "idle"
+frame_progress = 0.240716
+
+[node name="chest" type="AnimatedSprite2D" parent="."]
+position = Vector2(42, -15)
+sprite_frames = SubResource("SpriteFrames_n74k2")
+script = SubResource("GDScript_74lek")
+
+[node name="collision" type="StaticBody2D" parent="chest"]
+collision_mask = 7
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="chest/collision"]
+shape = SubResource("RectangleShape2D_si7kk")
+
+[node name="detection" type="Area2D" parent="chest"]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="chest/detection"]
+shape = SubResource("CircleShape2D_74lek")
+
+[connection signal="body_shape_entered" from="chest/detection" to="chest" method="_on_detection_body_shape_entered"]
+[connection signal="body_shape_exited" from="chest/detection" to="chest" method="_on_detection_body_shape_exited"]
